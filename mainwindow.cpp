@@ -91,6 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
     itemSelectScene = new QGraphicsScene(this);
     timer = new QTimer(this);
     curInfo = 0;
+    bakInfo = 0;
     curSprite = 0;
     select = 0;
     baseItems = new Sprite();
@@ -126,32 +127,6 @@ void MainWindow::base_items_on_mouse_press(qreal x,qreal y,Qt::MouseButtons butt
         this->curSprite->vindex =_vindex;
     }
 
-}
-//文件-新建地图
-void MainWindow::on_newAction_triggered()
-{
-
-    unsigned int i,j;
-
-    MapInfo* map = new MapInfo(base);
-
-    map->name = tr("新地图");
-    map->background = QColor(Qt::black);
-    map->height = 6;
-    map->width = 8;
-    map->type=1;
-    QList<MapBase*> list = map->getMapBaseInfo();
-    for(j=0;j < map->height;j++){
-        for(i=0;i < map->width;i++){
-
-            MapBase* base1 = new MapBase(map->base);
-            list.append(base1);
-        }
-    }
-    map->setMapBaseInfo(list);
-
-    this->initByMapInfo(map);
-    this->changed=true;
 }
 
 //编辑-物品贴图
@@ -196,7 +171,42 @@ void MainWindow::on_mapbaseAction_triggered(bool checked)
         QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
     }
 }
+//文件-新建地图
+void MainWindow::on_newAction_triggered()
+{
 
+    unsigned int i,j;
+
+    MapInfo* map = new MapInfo(base);
+
+    if(!this->bakInfo)this->bakInfo =  new MapInfo(base);
+
+    QString tname = tr("新地图");
+    map->name = tname;
+    this->bakInfo->name = tname;
+    map->background = QColor(Qt::black);
+    this->bakInfo->background = QColor(Qt::black);
+    map->height = 6;
+    this->bakInfo->height = 6;
+    map->width = 8;
+    this->bakInfo->width = 8;
+    map->type=1;
+    this->bakInfo->type = 1;
+
+    QList<MapBase*> list = map->getMapBaseInfo();
+    for(j=0;j < map->height;j++){
+        for(i=0;i < map->width;i++){
+
+            MapBase* base1 = new MapBase(map->base);
+            list.append(base1);
+        }
+    }
+    map->setMapBaseInfo(list);
+
+    this->initByMapInfo(map);
+
+    this->changed=true;
+}
 //文件-打开地图
 void MainWindow::on_openAction_triggered()
 {
@@ -206,10 +216,36 @@ void MainWindow::on_openAction_triggered()
     if(fileName.length()>0){
 
         MapInfo* map = new MapInfo(base);
+
         map->readMap(fileName);
+        if(!this->bakInfo)this->bakInfo =  new MapInfo(base);
+
+        this->bakInfo->name = map->name;
+        this->bakInfo->width = map->width;
+        this->bakInfo->height = map->height;
+        this->bakInfo->type = map->type;
+        this->bakInfo->background = map->background;
+
         this->opened = true;
         this->initByMapInfo(map);
 
+    }
+}
+//保存地图按钮
+void MainWindow::on_saveAction_triggered()
+{
+    if(opened){
+        QString filename = QFileDialog::getSaveFileName(this,tr("保存地图文件"), ".", tr("地图文件 (*.mdt)"));
+        if(filename.length()<=0) return;
+        if(filename.indexOf(".mdt") == -1)
+        {
+            filename = filename + ".mdt";
+        }
+        this->curInfo->name = this->ui->lineEdit_name->text();
+        this->curInfo->type = QVariant(this->ui->lineEdit_type->text()).toUInt();
+        this->curInfo->writeMap(filename);
+    }else{
+        QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
     }
 }
 //操作区-贴图按键
@@ -229,6 +265,39 @@ void MainWindow::map_base_on_press(int key)
     }
 
     qDebug()<< "key_press" ;
+}
+//退出
+void MainWindow::on_exitAction_triggered()
+{
+    int yn;
+
+    if(this->curInfo){  //检查属性变更
+        if(this->curInfo->name != this->bakInfo->name)
+            this->changed = true;
+
+        if(this->curInfo->type != this->bakInfo->type)
+            this->changed = true;
+
+        if(this->curInfo->width != this->bakInfo->width)
+            this->changed = true;
+
+        if(this->curInfo->height != this->bakInfo->height)
+            this->changed = true;
+
+        if(this->curInfo->background != this->bakInfo->background)
+            this->changed = true;
+    }
+    if(this->changed)
+        yn = QMessageBox::question(this,tr("是否保存"),tr("文件的修改是否保存"),QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+    else
+        yn = QMessageBox::No;
+
+    if(yn == QMessageBox::No){//不保存
+        exit(0);
+    }else if(yn == QMessageBox::Yes){ //保存
+        on_saveAction_triggered();
+        QApplication::exit();
+    }
 }
 //操作区-基本贴图点击
 void MainWindow::map_base_on_mouse_press(qreal x,qreal y,Qt::MouseButtons btns)
@@ -269,39 +338,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->ignore();
     on_exitAction_triggered();
 }
-//退出
-void MainWindow::on_exitAction_triggered()
-{
-    int yn;
-    if(changed)
-        yn = QMessageBox::question(this,tr("是否保存"),tr("修改是否保存"),QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
-    else
-        yn = QMessageBox::No;
-
-    if(yn == QMessageBox::No){//不保存
-        exit(0);
-    }else if(yn == QMessageBox::Yes){ //保存
-        on_saveAction_triggered();
-        exit(0);
-    }
-}
-//保存地图按钮
-void MainWindow::on_saveAction_triggered()
-{
-    if(opened){
-        QString filename = QFileDialog::getSaveFileName(this,tr("保存地图文件"), ".", tr("地图文件 (*.mdt)"));
-        if(filename.length()<=0) return;
-        if(filename.indexOf(".mdt") == -1)
-        {
-            filename = filename + ".mdt";
-        }
-        this->curInfo->name = this->ui->lineEdit_name->text();
-        this->curInfo->type = QVariant(this->ui->lineEdit_type->text()).toUInt();
-        this->curInfo->writeMap(filename);
-    }else{
-        QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
-    }
-}
 
 //背景选择编辑
 void MainWindow::on_lineEdit_bgcolor_textEdited(QString colorname)
@@ -332,7 +368,6 @@ void MainWindow::on_pushButton_clicked()
 //被选闪耀
 void MainWindow::time_out()
 {
-
     if(this->curSprite){
         if(this->curSprite->isVisible())
             this->curSprite->hide();
@@ -391,6 +426,22 @@ void MainWindow::on_height_spinBox_valueChanged(int value)
     qDebug() << "value is " <<  value;
 }
 
+void MainWindow::on_lineEdit_type_textChanged(const QString& type)
+{
+    if(this->curInfo){
+        this->curInfo->type = type.toInt();
+    }
+    qDebug() << "type is " <<  type;
+}
+
+
+void MainWindow::on_lineEdit_name_textChanged(const QString& name)
+{
+    if(this->curInfo){
+        this->curInfo->name = name.toInt();
+    }
+    qDebug() << "name is " <<  name;
+}
 bool MainWindow::isChange(){
     return this->changed;
 }
@@ -398,3 +449,5 @@ bool MainWindow::isChange(){
 bool MainWindow::isOpen(){
     return this->opened;
 }
+
+

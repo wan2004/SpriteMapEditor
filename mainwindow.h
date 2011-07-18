@@ -32,6 +32,7 @@ private:
     QGraphicsItem* select;
     MapManager* manager;
     MapInfo* curInfo;
+    MapInfo* bakInfo;
     MapBase* curSprite;
     QTimer* timer;
     void regHandleSignal(Sprite* sprite);
@@ -54,6 +55,8 @@ private slots:
     void time_out();
     void on_mapitemAction_triggered(bool checked);
     void on_mapbaseAction_triggered(bool checked);
+    void on_lineEdit_type_textChanged(const QString& type);
+    void on_lineEdit_name_textChanged(const QString& name);
 };
 
 #endif // MAINWINDOW_H
