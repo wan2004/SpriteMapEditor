@@ -215,7 +215,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>20</height>
+     <height>18</height>
     </rect>
    </property>
    <property name="font">
@@ -314,7 +314,10 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>普通贴图</string>
+    <string>物品贴图</string>
+   </property>
+   <property name="toolTip">
+    <string>物品贴图</string>
    </property>
    <property name="font">
     <font>

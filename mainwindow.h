@@ -20,14 +20,15 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
+    bool isOpen();
+    bool isChange();
 protected:
     void closeEvent( QCloseEvent * event );
 private:
     Ui::MainWindow *ui;
     QGraphicsScene* itemSelectScene; //选择背景图片
     QGraphicsScene* scene;// 主要地图显示
-    Sprite* baseItems;
+    Sprite* baseItems; //贴图元件
     QGraphicsItem* select;
     MapManager* manager;
     MapInfo* curInfo;
@@ -36,6 +37,8 @@ private:
     void regHandleSignal(Sprite* sprite);
     void changeSelectBase(int mhindex,int mvindex);
     void initByMapInfo(MapInfo* map);
+    bool opened;
+    bool changed;
 private slots:
     void on_height_spinBox_valueChanged(int );
     void on_width_spinBox_valueChanged(int );

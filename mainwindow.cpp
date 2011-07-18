@@ -12,15 +12,11 @@
 #include <QColorDialog>
 #include <QList>
 #include <QTimer>
-#include <QScopedPointer>
-
 #include <QGraphicsScene>
-#include <QObject>
 #include <QGraphicsItem>
 #include <QPixmap>
 
 #define DEF_BASE "base1.png"
-
 
 static QString base(DEF_BASE);
 
@@ -86,7 +82,9 @@ void MainWindow::regHandleSignal(Sprite* sprite)
 }
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent),
-        ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    opened(false),
+    changed(false)
 {
 
     scene = new QGraphicsScene(this);
@@ -113,9 +111,12 @@ MainWindow::~MainWindow()
 {
 
 }
+
+//贴图区-物件单击
 void MainWindow::base_items_on_mouse_press(qreal x,qreal y,Qt::MouseButtons button)
 {
     qDebug() << "select item";
+    this->changed=true;
     if(this->curSprite){
 
         int _hindex = int( x / this->curSprite->sizeH);
@@ -126,11 +127,11 @@ void MainWindow::base_items_on_mouse_press(qreal x,qreal y,Qt::MouseButtons butt
     }
 
 }
-
+//文件-新建地图
 void MainWindow::on_newAction_triggered()
 {
 
-    int i,j;
+    unsigned int i,j;
 
     MapInfo* map = new MapInfo(base);
 
@@ -150,46 +151,55 @@ void MainWindow::on_newAction_triggered()
     map->setMapBaseInfo(list);
 
     this->initByMapInfo(map);
-
+    this->changed=true;
 }
+
+//编辑-物品贴图
 void MainWindow::on_mapitemAction_triggered(bool checked)
 {
-
-    qDebug()<< checked ;
-    ui->mapbaseAction->setChecked(!checked);
-    int size = this->curInfo->getMapBaseInfo().size();
-    for(int i = 0; i < size ;i++){
-        Sprite* sprite = this->curInfo->getMapBaseInfo().at(i);
-        sprite->disconnect(sprite,0,this,0);
+    if(opened){
+        qDebug()<< checked ;
+        ui->mapbaseAction->setChecked(!checked);
+        int size = this->curInfo->getMapBaseInfo().size();
+        for(int i = 0; i < size ;i++){
+            Sprite* sprite = this->curInfo->getMapBaseInfo().at(i);
+            sprite->disconnect(sprite,0,this,0);
+        }
+        size = this->curInfo->getMapItemInfo().size();
+        for(int i = 0; i < size ;i++){
+            Sprite* sprite = this->curInfo->getMapItemInfo().at(i);
+            this->regHandleSignal(sprite);
+        }
+    }else{
+        static_cast<QAction*>(this->sender())->setChecked(!checked);
+        QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
     }
-    size = this->curInfo->getMapItemInfo().size();
-    for(int i = 0; i < size ;i++){
-        Sprite* sprite = this->curInfo->getMapItemInfo().at(i);
-        this->regHandleSignal(sprite);
-    }
-
 }
+//编辑-基本贴图
 void MainWindow::on_mapbaseAction_triggered(bool checked)
 {
-
-    qDebug()<< checked;
-    ui->mapitemAction->setChecked(!checked);
-    int size = this->curInfo->getMapItemInfo().size();
-    for(int i = 0; i < size ;i++){
-        Sprite* sprite = this->curInfo->getMapItemInfo().at(i);
-        sprite->disconnect(sprite,0,this,0);
+    if(opened){
+        qDebug()<< checked;
+        ui->mapitemAction->setChecked(!checked);
+        int size = this->curInfo->getMapItemInfo().size();
+        for(int i = 0; i < size ;i++){
+            Sprite* sprite = this->curInfo->getMapItemInfo().at(i);
+            sprite->disconnect(sprite,0,this,0);
+        }
+        size = this->curInfo->getMapBaseInfo().size();
+        for(int i = 0; i < size ;i++){
+            Sprite* sprite = this->curInfo->getMapBaseInfo().at(i);
+            this->regHandleSignal(sprite);
+        }
+    }else{
+        static_cast<QAction*>(this->sender())->setChecked(!checked);
+        QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
     }
-    size = this->curInfo->getMapBaseInfo().size();
-    for(int i = 0; i < size ;i++){
-        Sprite* sprite = this->curInfo->getMapBaseInfo().at(i);
-        this->regHandleSignal(sprite);
-    }
-
 }
 
+//文件-打开地图
 void MainWindow::on_openAction_triggered()
 {
-
     QString fileName;
     fileName = QFileDialog::getOpenFileName(this,tr("打开地图文件"), ".", tr("地图文件 (*.mdt)"));
 
@@ -197,11 +207,12 @@ void MainWindow::on_openAction_triggered()
 
         MapInfo* map = new MapInfo(base);
         map->readMap(fileName);
+        this->opened = true;
         this->initByMapInfo(map);
 
     }
 }
-
+//操作区-贴图按键
 void MainWindow::map_base_on_press(int key)
 {
     MapBase* base = (MapBase*)(sender());
@@ -219,7 +230,7 @@ void MainWindow::map_base_on_press(int key)
 
     qDebug()<< "key_press" ;
 }
-
+//操作区-基本贴图点击
 void MainWindow::map_base_on_mouse_press(qreal x,qreal y,Qt::MouseButtons btns)
 {
     MapBase* base = (MapBase*)(sender());
@@ -258,11 +269,15 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->ignore();
     on_exitAction_triggered();
 }
-
+//退出
 void MainWindow::on_exitAction_triggered()
 {
+    int yn;
+    if(changed)
+        yn = QMessageBox::question(this,tr("是否保存"),tr("修改是否保存"),QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+    else
+        yn = QMessageBox::No;
 
-    int yn = QMessageBox::question(this,tr("是否保存"),tr("修改是否保存"),QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
     if(yn == QMessageBox::No){//不保存
         exit(0);
     }else if(yn == QMessageBox::Yes){ //保存
@@ -270,29 +285,34 @@ void MainWindow::on_exitAction_triggered()
         exit(0);
     }
 }
-
+//保存地图按钮
 void MainWindow::on_saveAction_triggered()
 {
-
-    QString filename = QFileDialog::getSaveFileName(this,tr("保存地图文件"), ".", tr("地图文件 (*.mdt)"));
-    if(filename.length()<=0) return;
-    if(filename.indexOf(".mdt") == -1)
-    {
-        filename = filename + ".mdt";
+    if(opened){
+        QString filename = QFileDialog::getSaveFileName(this,tr("保存地图文件"), ".", tr("地图文件 (*.mdt)"));
+        if(filename.length()<=0) return;
+        if(filename.indexOf(".mdt") == -1)
+        {
+            filename = filename + ".mdt";
+        }
+        this->curInfo->name = this->ui->lineEdit_name->text();
+        this->curInfo->type = QVariant(this->ui->lineEdit_type->text()).toUInt();
+        this->curInfo->writeMap(filename);
+    }else{
+        QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
     }
-    this->curInfo->name = this->ui->lineEdit_name->text();
-    this->curInfo->type = QVariant(this->ui->lineEdit_type->text()).toUInt();
-    this->curInfo->writeMap(filename);
 }
 
+//背景选择编辑
 void MainWindow::on_lineEdit_bgcolor_textEdited(QString colorname)
 {
-
+    this->changed = true;
     this->ui->label_color->setStyleSheet(tr("QLabel{background:#%1}").arg(colorname));
     this->curInfo->background = QColor("#"+colorname);
     this->scene->setBackgroundBrush(this->curInfo->background);
 }
 
+//背景颜色选择
 void MainWindow::on_pushButton_clicked()
 {
 
@@ -309,10 +329,7 @@ void MainWindow::on_pushButton_clicked()
     this->scene->setBackgroundBrush(this->curInfo->background);
 }
 
-/*
- * 修改地图大小
- */
-
+//被选闪耀
 void MainWindow::time_out()
 {
 
@@ -324,6 +341,10 @@ void MainWindow::time_out()
     }
 }
 
+/*
+ * 修改地图大小
+ */
+//调整地图宽度
 void MainWindow::on_width_spinBox_valueChanged(int value)
 {
 
@@ -346,7 +367,7 @@ void MainWindow::on_width_spinBox_valueChanged(int value)
     }
     qDebug() << "value is " <<  value;
 }
-
+//调整地图高度
 void MainWindow::on_height_spinBox_valueChanged(int value)
 {
 
@@ -368,4 +389,12 @@ void MainWindow::on_height_spinBox_valueChanged(int value)
         }
     }
     qDebug() << "value is " <<  value;
+}
+
+bool MainWindow::isChange(){
+    return this->changed;
+}
+
+bool MainWindow::isOpen(){
+    return this->opened;
 }
