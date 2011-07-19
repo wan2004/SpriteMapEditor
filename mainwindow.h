@@ -12,11 +12,9 @@ namespace Ui {
 }
 
 
-class MainWindowPrivate;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(MainWindow)
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
