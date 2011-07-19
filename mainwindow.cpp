@@ -16,7 +16,7 @@
 #include <QGraphicsItem>
 #include <QPixmap>
 
-#define DEF_BASE "base1.png"
+const char* DEF_BASE = "base1.png";
 
 static QString base(DEF_BASE);
 
@@ -204,7 +204,7 @@ void MainWindow::on_newAction_triggered()
     map->setMapBaseInfo(list);
 
     this->initByMapInfo(map);
-
+    this->opened=true;
     this->changed=true;
 }
 //文件-打开地图
@@ -271,22 +271,8 @@ void MainWindow::on_exitAction_triggered()
 {
     int yn;
 
-    if(this->curInfo){  //检查属性变更
-        if(this->curInfo->name != this->bakInfo->name)
-            this->changed = true;
+    isChange();
 
-        if(this->curInfo->type != this->bakInfo->type)
-            this->changed = true;
-
-        if(this->curInfo->width != this->bakInfo->width)
-            this->changed = true;
-
-        if(this->curInfo->height != this->bakInfo->height)
-            this->changed = true;
-
-        if(this->curInfo->background != this->bakInfo->background)
-            this->changed = true;
-    }
     if(this->changed)
         yn = QMessageBox::question(this,tr("是否保存"),tr("文件的修改是否保存"),QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
     else
@@ -443,11 +429,45 @@ void MainWindow::on_lineEdit_name_textChanged(const QString& name)
     qDebug() << "name is " <<  name;
 }
 bool MainWindow::isChange(){
+    if(this->curInfo){  //检查属性变更
+        if(this->curInfo->name != this->bakInfo->name)
+            this->changed = true;
+
+        if(this->curInfo->type != this->bakInfo->type)
+            this->changed = true;
+
+        if(this->curInfo->width != this->bakInfo->width)
+            this->changed = true;
+
+        if(this->curInfo->height != this->bakInfo->height)
+            this->changed = true;
+
+        if(this->curInfo->background != this->bakInfo->background)
+            this->changed = true;
+    }
     return this->changed;
 }
 
 bool MainWindow::isOpen(){
     return this->opened;
 }
-
-
+//查看-显示背景
+void MainWindow::on_mapbaseViewAction_triggered(bool checked)
+{
+    if(this->opened){
+        QList<MapBase*> baseList = this->curInfo->getMapBaseInfo();
+        foreach(MapBase* base,baseList){
+            base->setVisible(checked);
+        }
+    }
+}
+//查看-显示物件
+void MainWindow::on_mapitemViewAction_triggered(bool checked)
+{
+    if(this->opened){
+        QList<MapItem*> itemList = this->curInfo->getMapItemInfo();
+        foreach(MapItem* item,itemList){
+            item->setVisible(checked);
+        }
+    }
+}

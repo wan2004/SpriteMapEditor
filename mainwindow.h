@@ -57,6 +57,8 @@ private slots:
     void on_mapbaseAction_triggered(bool checked);
     void on_lineEdit_type_textChanged(const QString& type);
     void on_lineEdit_name_textChanged(const QString& name);
+    void on_mapbaseViewAction_triggered(bool checked);
+    void on_mapitemViewAction_triggered(bool checked);
 };
 
 #endif // MAINWINDOW_H

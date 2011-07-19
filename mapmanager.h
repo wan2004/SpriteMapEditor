@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QMap>
 #include <QList>
+const int DEF_SPRITE_LEVEL=1;
 class Sprite;
 class MapInfo;
 class MapBase;
@@ -14,7 +15,7 @@ class MapManager : public QObject
 public:
     explicit MapManager(QGraphicsScene* scene,QObject *parent = 0);
     bool initMap(MapInfo* mapinfo);
-    Sprite* addSprite(Sprite* sprite,QString type,unsigned int level=1);
+    Sprite* addSprite(Sprite* sprite,QString type,int level=DEF_SPRITE_LEVEL);
     Sprite* removeSprite(Sprite* sprite,QString type);
     bool isInitialized();
     QMap< QString , QList<Sprite*>* > spriteMap;

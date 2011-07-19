@@ -10,7 +10,6 @@ LIBS     += -L ./ -lgpscene
 TARGET = SpriteMapEditor
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
         mainwindow.cpp
 
@@ -20,6 +19,5 @@ HEADERS  += mainwindow.h\
             mapmanager.h\
             sprite.h \
     mapitem.h
-
 
 FORMS    += mainwindow.ui
