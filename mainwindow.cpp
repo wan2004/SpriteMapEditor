@@ -4,6 +4,7 @@
 #include "mapbase.h"
 #include "mapmanager.h"
 #include "sprite.h"
+#include "inmapitemdialog.h"
 #include <QObject>
 #include <QCloseEvent>
 #include <QMessageBox>
@@ -20,6 +21,7 @@ const char* DEF_BASE = "base1.png";
 
 static QString base(DEF_BASE);
 
+//初始化地图
 void MainWindow::initByMapInfo(MapInfo *map)
 {
 
@@ -100,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->timer->setInterval(500);
     connect(this->timer,SIGNAL(timeout()),this,SLOT(time_out()));
-
+    this->setWindowFlags(Qt::WindowMinimizeButtonHint);
     this->ui->graphicsView->setScene(this->scene);
     //connect(ui->mapitemAction,SIGNAL(triggered()),this,SLOT(on_mapitemAction_triggered()));
     this->ui->items_GraphicsView->setScene(this->itemSelectScene);
@@ -448,7 +450,8 @@ bool MainWindow::isChange(){
     return this->changed;
 }
 
-bool MainWindow::isOpen(){
+bool MainWindow::isOpen()
+{
     return this->opened;
 }
 //查看-显示背景
@@ -470,4 +473,11 @@ void MainWindow::on_mapitemViewAction_triggered(bool checked)
             item->setVisible(checked);
         }
     }
+}
+//编辑-插入物件
+void MainWindow::on_insertMapItemAction_triggered()
+{
+    InMapItemDialog dialog(this->curInfo,this->manager,this);
+    MapItem* insertItem = dialog.getMapItem(this->baseItems);
+
 }

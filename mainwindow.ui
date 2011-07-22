@@ -244,6 +244,8 @@
     </property>
     <addaction name="mapbaseAction"/>
     <addaction name="mapitemAction"/>
+    <addaction name="separator"/>
+    <addaction name="insertMapItemAction"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -385,6 +387,17 @@
    </property>
    <property name="toolTip">
     <string>显示物件</string>
+   </property>
+  </action>
+  <action name="insertMapItemAction">
+   <property name="text">
+    <string>插入物件</string>
+   </property>
+   <property name="toolTip">
+    <string>插入物件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
    </property>
   </action>
  </widget>

@@ -57,6 +57,7 @@ private slots:
     void on_lineEdit_name_textChanged(const QString& name);
     void on_mapbaseViewAction_triggered(bool checked);
     void on_mapitemViewAction_triggered(bool checked);
+    void on_insertMapItemAction_triggered();
 };
 
 #endif // MAINWINDOW_H
