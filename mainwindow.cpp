@@ -63,6 +63,7 @@ void MainWindow::initByMapInfo(MapInfo *map)
     //
     //this->scene->setSceneRect(0,0,780,600);
 }
+//在选择区选择时加入的选区范围图示
 void MainWindow::changeSelectBase(int mhindex,int mvindex)
 {
     if(select)delete select;
@@ -77,7 +78,6 @@ void MainWindow::changeSelectBase(int mhindex,int mvindex)
 }
 void MainWindow::regHandleSignal(Sprite* sprite)
 {
-
     sprite->setFlags(QGraphicsItem::ItemIsFocusable);
     this->connect(sprite,SIGNAL(onKeyRelease(int)),this,SLOT(map_base_on_press(int)));
     this->connect(sprite,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_base_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
@@ -478,6 +478,6 @@ void MainWindow::on_mapitemViewAction_triggered(bool checked)
 void MainWindow::on_insertMapItemAction_triggered()
 {
     InMapItemDialog dialog(this->curInfo,this->manager,this);
-    MapItem* insertItem = dialog.getMapItem(this->baseItems);
+    MapItem* insertItem = dialog.createMapItem(this->baseItems);
 
 }

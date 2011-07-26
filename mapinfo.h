@@ -20,7 +20,7 @@ public:
     unsigned int type;
     QPixmap* base;
     QList<MapBase*> getMapBaseInfo();// 获得 地图上每个背景块
-    QList<MapItem*> getMapItemInfo();// 获得 地图上每个背景块，
+    QList<MapItem*> getMapItemInfo();// 获得 地图上每个背景块
     void setMapBaseInfo(QList<MapBase*> list);
     bool setMapBase(unsigned int row,unsigned int col,MapBase* base); //设置指定点的Base
     bool readMap(QString &path); //读取地图文件
