@@ -478,6 +478,6 @@ void MainWindow::on_mapitemViewAction_triggered(bool checked)
 void MainWindow::on_insertMapItemAction_triggered()
 {
     InMapItemDialog dialog(this->curInfo,this->manager,this);
-    MapItem* insertItem = dialog.createMapItem(this->baseItems);
+    MapItem* insertItem = dialog.createMapItem();
 
 }

@@ -36,24 +36,28 @@ InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *p
     connect(ui->tileHeight,SIGNAL(valueChanged(int)),ui->tileHeightLabel,SLOT(setNum(int)));
 
     ui->itemView->setScene(selectScene);
-
+    baseItems = new Sprite();
+    baseItems->setPixmap(this->mapInfo->base);
+    connect(baseItems,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)),this,SLOT(select_item_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
+    this->selectScene->addItem(baseItems);
 }
 
 InMapItemDialog::~InMapItemDialog()
 {
     delete ui;
+    delete baseItems;
+    if(selectRect)delete selectRect;
+    delete selectScene;
 }
 
 //实现插入MapItem 返回 0表示取消插入
-MapItem* InMapItemDialog::createMapItem(Sprite* baseItems)
+MapItem* InMapItemDialog::createMapItem()
 {
+
     returnItem = new MapItem(this->mapInfo->base);
-    this->selectScene->addItem(baseItems);
-    connect(baseItems,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)),this,SLOT(select_item_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
+
     this->exec();
 
-
-    disconnect(baseItems,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)));
     return returnItem;
 }
 

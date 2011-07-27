@@ -20,13 +20,14 @@ class InMapItemDialog : public QDialog
 public:
     InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *parent = 0);
     ~InMapItemDialog();
-    MapItem* createMapItem(Sprite* base);
+    MapItem* createMapItem();
 private:
     MapInfo* mapInfo;
     MapManager* mapManager;
     MapItem* returnItem;
     QGraphicsScene* selectScene;
     QGraphicsItem* selectRect;
+    Sprite* baseItems;
     Ui::InMapItemDialog *ui;
     void changeSelectBase(int mhindex,int mvindex);
 private slots:
