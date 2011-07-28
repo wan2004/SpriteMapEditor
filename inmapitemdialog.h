@@ -21,6 +21,8 @@ public:
     InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *parent = 0);
     ~InMapItemDialog();
     MapItem* createMapItem();
+protected:
+    void closeEvent(QCloseEvent *);
 private:
     MapInfo* mapInfo;
     MapManager* mapManager;
@@ -31,8 +33,9 @@ private:
     Ui::InMapItemDialog *ui;
     void changeSelectBase(int mhindex,int mvindex);
 private slots:
-    void on_ok_click();
-    void on_cancel_click();
+    void ok_click();
+    void cancel_click();
+    void rule_slider();
     void select_item_on_mouse_press(qreal x,qreal y,Qt::MouseButtons button);
 };
 

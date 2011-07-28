@@ -477,7 +477,8 @@ void MainWindow::on_mapitemViewAction_triggered(bool checked)
 //编辑-插入物件
 void MainWindow::on_insertMapItemAction_triggered()
 {
-    InMapItemDialog dialog(this->curInfo,this->manager,this);
-    MapItem* insertItem = dialog.createMapItem();
-
+    if(isOpen()){
+        InMapItemDialog dialog(this->curInfo,this->manager,this);
+        MapItem* insertItem = dialog.createMapItem();
+    }
 }

@@ -9,14 +9,15 @@
 #include <QDebug>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
-
+#include <QSlider>
 InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *parent) :
     QDialog(parent),
     mapInfo(mapinfo),
     mapManager(manager),
     returnItem(0),
-    selectRect(0),
     selectScene(new QGraphicsScene(this)),
+    selectRect(0),
+    baseItems(new Sprite()),
     ui(new Ui::InMapItemDialog)
 {
     ui->setupUi(this);
@@ -27,16 +28,17 @@ InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *p
     ui->tileHeight->setPageStep(DEF_MAPBASE_HEIGHT);
     ui->tileWidth->setSingleStep(DEF_MAPBASE_WIDTH);
     ui->tileWidth->setPageStep(DEF_MAPBASE_WIDTH);
+    connect(ui->tileWidth,SIGNAL(sliderReleased()),this,SLOT(rule_slider()));
+    connect(ui->tileHeight,SIGNAL(sliderReleased()),this,SLOT(rule_slider()));
 
-    connect(ui->buttonBox,SIGNAL(accepted()),this,SLOT(on_ok_click()));
-    connect(ui->buttonBox,SIGNAL(rejected()),this,SLOT(on_cancel_click()));
+    connect(ui->buttonBox,SIGNAL(accepted()),this,SLOT(ok_click()));
+    connect(ui->buttonBox,SIGNAL(rejected()),this,SLOT(cancel_click()));
     connect(ui->tileWidth,SIGNAL(sliderMoved(int)),ui->tileWidthLabel,SLOT(setNum(int)));
     connect(ui->tileHeight,SIGNAL(sliderMoved(int)),ui->tileHeightLabel,SLOT(setNum(int)));
     connect(ui->tileWidth,SIGNAL(valueChanged(int)),ui->tileWidthLabel,SLOT(setNum(int)));
     connect(ui->tileHeight,SIGNAL(valueChanged(int)),ui->tileHeightLabel,SLOT(setNum(int)));
 
     ui->itemView->setScene(selectScene);
-    baseItems = new Sprite();
     baseItems->setPixmap(this->mapInfo->base);
     connect(baseItems,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)),this,SLOT(select_item_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
     this->selectScene->addItem(baseItems);
@@ -50,6 +52,11 @@ InMapItemDialog::~InMapItemDialog()
     delete selectScene;
 }
 
+void InMapItemDialog::closeEvent(QCloseEvent *)
+{
+    this->cancel_click();
+}
+
 //实现插入MapItem 返回 0表示取消插入
 MapItem* InMapItemDialog::createMapItem()
 {
@@ -61,7 +68,7 @@ MapItem* InMapItemDialog::createMapItem()
     return returnItem;
 }
 
-void InMapItemDialog::on_ok_click()
+void InMapItemDialog::ok_click()
 {
 
     returnItem->typeName = this->ui->itemNameEdit->text();
@@ -71,7 +78,7 @@ void InMapItemDialog::on_ok_click()
     qDebug() << "onOkClick";
 }
 
-void InMapItemDialog::on_cancel_click()
+void InMapItemDialog::cancel_click()
 {
     qDebug() << "onCancelClick";
     delete this->returnItem;
@@ -100,4 +107,9 @@ void InMapItemDialog::changeSelectBase(int mhindex,int mvindex)
                                           QPen(Qt::DashLine) ,
                                           QBrush(Qt::blue,Qt::Dense7Pattern)
                                           );
+}
+void InMapItemDialog::rule_slider()
+{
+    QSlider* sender = static_cast<QSlider* >(this->sender());
+    sender->setValue(sender->value() - sender->value() % sender->singleStep());
 }
