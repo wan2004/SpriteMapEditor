@@ -13,7 +13,8 @@ class MapManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit MapManager(QGraphicsScene* scene,QObject *parent = 0);
+    MapManager(QGraphicsScene* scene,QObject *parent = 0);
+    ~MapManager();
     bool initMap(MapInfo* mapinfo);
     Sprite* addSprite(Sprite* sprite,QString type,int level=DEF_SPRITE_LEVEL);
     Sprite* removeSprite(Sprite* sprite,QString type);

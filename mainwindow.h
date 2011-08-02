@@ -29,8 +29,8 @@ private:
     Sprite* baseItems; //贴图元件
     QGraphicsItem* select;
     MapManager* manager;
-    MapInfo* curInfo;
-    MapInfo* bakInfo;
+    MapInfo* curMapInfo;
+    MapInfo* bakMapInfo;
     MapBase* curSprite;
     QTimer* timer;
     void regHandleSignal(Sprite* sprite);

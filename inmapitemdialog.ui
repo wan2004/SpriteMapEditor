@@ -177,6 +177,9 @@
       <height>22</height>
      </rect>
     </property>
+    <property name="value">
+     <number>1</number>
+    </property>
    </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_4">
@@ -226,6 +229,9 @@
       <height>22</height>
      </rect>
     </property>
+    <property name="value">
+     <number>0</number>
+    </property>
    </widget>
    <widget class="QSpinBox" name="ySpinBox">
     <property name="geometry">
@@ -236,6 +242,9 @@
       <height>22</height>
      </rect>
     </property>
+    <property name="value">
+     <number>0</number>
+    </property>
    </widget>
    <widget class="QSpinBox" name="zSpinBox">
     <property name="geometry">
@@ -245,6 +254,9 @@
       <width>51</width>
       <height>22</height>
      </rect>
+    </property>
+    <property name="value">
+     <number>0</number>
     </property>
    </widget>
   </widget>
@@ -269,6 +281,9 @@
       <height>22</height>
      </rect>
     </property>
+    <property name="value">
+     <number>1</number>
+    </property>
    </widget>
    <widget class="QSpinBox" name="crossTypeBox">
     <property name="geometry">
@@ -278,6 +293,9 @@
       <width>71</width>
       <height>22</height>
      </rect>
+    </property>
+    <property name="value">
+     <number>1</number>
     </property>
    </widget>
   </widget>
@@ -291,9 +309,9 @@
     </rect>
    </property>
    <property name="title">
-    <string>特殊触发编号</string>
+    <string>特殊触发(编号)</string>
    </property>
-   <widget class="QSpinBox" name="triggerBox">
+   <widget class="QSpinBox" name="specialSpinBox">
     <property name="geometry">
      <rect>
       <x>50</x>

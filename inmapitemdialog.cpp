@@ -42,6 +42,10 @@ InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *p
     baseItems->setPixmap(this->mapInfo->base);
     connect(baseItems,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)),this,SLOT(select_item_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
     this->selectScene->addItem(baseItems);
+
+    this->returnItem = new MapItem(this->mapInfo->base);
+
+    select_item_on_mouse_press(1.0,1.0,0); // 默认选择贴图1,1
 }
 
 InMapItemDialog::~InMapItemDialog()
@@ -60,10 +64,9 @@ void InMapItemDialog::closeEvent(QCloseEvent *)
 //实现插入MapItem 返回 0表示取消插入
 MapItem* InMapItemDialog::createMapItem()
 {
-
-    returnItem = new MapItem(this->mapInfo->base);
-
     this->exec();
+
+    if(this->returnItem)qDebug() <<"typename:" << returnItem->typeName;
 
     return returnItem;
 }
@@ -72,8 +75,14 @@ void InMapItemDialog::ok_click()
 {
 
     returnItem->typeName = this->ui->itemNameEdit->text();
-    returnItem->iColnum = this->ui->tileWidth->value();
-    returnItem->iRownum = this->ui->tileHeight->value();
+    returnItem->setIColnum(this->ui->tileWidth->value() / returnItem->sizeH);
+    returnItem->setIRownum(this->ui->tileHeight->value() / returnItem->sizeV);
+    returnItem->mapX = this->ui->xSpinBox->value();
+    returnItem->mapY = this->ui->ySpinBox->value();
+    returnItem->mapZ = this->ui->zSpinBox->value();
+    returnItem->checkType = this->ui->checkTypeBox->value();
+    returnItem->crossType = this->ui->crossTypeBox->value();
+    returnItem->special = this->ui->specialSpinBox->value();
 
     qDebug() << "onOkClick";
 }

@@ -25,38 +25,39 @@ static QString base(DEF_BASE);
 void MainWindow::initByMapInfo(MapInfo *map)
 {
 
-    if(this->curInfo)delete this->curInfo;
+    if(this->curMapInfo)delete this->curMapInfo;
 
-    this->curInfo = map;
+    this->curMapInfo = map;
 
-    this->ui->lineEdit_name->setText(this->curInfo->name);
+    this->ui->lineEdit_name->setText(this->curMapInfo->name);
 
-    this->ui->lineEdit_bgcolor->setText(this->curInfo->background.name().mid(1));
+    this->ui->lineEdit_bgcolor->setText(this->curMapInfo->background.name().mid(1));
 
-    this->ui->label_color->setStyleSheet(QObject::tr("QLabel{background:%1}").arg(this->curInfo->background.name()));
+    this->ui->label_color->setStyleSheet(QObject::tr("QLabel{background:%1}").arg(this->curMapInfo->background.name()));
 
-    this->ui->lineEdit_type->setText(QVariant(this->curInfo->type).toString());
+    this->ui->lineEdit_type->setText(QVariant(this->curMapInfo->type).toString());
 
-    this->ui->width_spinBox->setValue(this->curInfo->width);
+    this->ui->width_spinBox->setValue(this->curMapInfo->width);
 
-    this->ui->height_spinBox->setValue(this->curInfo->height);
+    this->ui->height_spinBox->setValue(this->curMapInfo->height);
 
     int i;
-    QList<MapBase*> list = this->curInfo->getMapBaseInfo();
+    QList<MapBase*> list = this->curMapInfo->getMapBaseInfo();
     for(i=0;i<list.length();i++){
         this->regHandleSignal(list.at(i));
     }
-    QList<MapItem*> list1 = this->curInfo->getMapItemInfo();
+    QList<MapItem*> list1 = this->curMapInfo->getMapItemInfo();
     for(i=0;i<list1.length();i++){
         //this->regHandleSignal(list1.at(i));//物品无初始化事件
 
     }
-    this->manager->initMap(this->curInfo);
+    this->manager->initMap(this->curMapInfo);
 
-    this->baseItems->setPixmap(this->curInfo->base);
+    this->baseItems->setPixmap(this->curMapInfo->base);
     this->itemSelectScene->addItem(this->baseItems);
     this->itemSelectScene->update();
     this->ui->items_GraphicsView->scroll(0,0);
+
     //QGraphicsItemGroup* group = this->scene->createItemGroup(this->scene->items());
     //group->setPos(100,100);
     //this->scene->destroyItemGroup(group);
@@ -92,8 +93,8 @@ MainWindow::MainWindow(QWidget *parent) :
     scene = new QGraphicsScene(this);
     itemSelectScene = new QGraphicsScene(this);
     timer = new QTimer(this);
-    curInfo = 0;
-    bakInfo = 0;
+    curMapInfo = 0;
+    bakMapInfo = 0;
     curSprite = 0;
     select = 0;
     baseItems = new Sprite();
@@ -137,14 +138,14 @@ void MainWindow::on_mapitemAction_triggered(bool checked)
     if(opened){
         qDebug()<< checked ;
         ui->mapbaseAction->setChecked(!checked);
-        int size = this->curInfo->getMapBaseInfo().size();
+        int size = this->curMapInfo->getMapBaseInfo().size();
         for(int i = 0; i < size ;i++){
-            Sprite* sprite = this->curInfo->getMapBaseInfo().at(i);
+            Sprite* sprite = this->curMapInfo->getMapBaseInfo().at(i);
             sprite->disconnect(sprite,0,this,0);
         }
-        size = this->curInfo->getMapItemInfo().size();
+        size = this->curMapInfo->getMapItemInfo().size();
         for(int i = 0; i < size ;i++){
-            Sprite* sprite = this->curInfo->getMapItemInfo().at(i);
+            Sprite* sprite = this->curMapInfo->getMapItemInfo().at(i);
             this->regHandleSignal(sprite);
         }
     }else{
@@ -158,14 +159,14 @@ void MainWindow::on_mapbaseAction_triggered(bool checked)
     if(opened){
         qDebug()<< checked;
         ui->mapitemAction->setChecked(!checked);
-        int size = this->curInfo->getMapItemInfo().size();
+        int size = this->curMapInfo->getMapItemInfo().size();
         for(int i = 0; i < size ;i++){
-            Sprite* sprite = this->curInfo->getMapItemInfo().at(i);
+            Sprite* sprite = this->curMapInfo->getMapItemInfo().at(i);
             sprite->disconnect(sprite,0,this,0);
         }
-        size = this->curInfo->getMapBaseInfo().size();
+        size = this->curMapInfo->getMapBaseInfo().size();
         for(int i = 0; i < size ;i++){
-            Sprite* sprite = this->curInfo->getMapBaseInfo().at(i);
+            Sprite* sprite = this->curMapInfo->getMapBaseInfo().at(i);
             this->regHandleSignal(sprite);
         }
     }else{
@@ -181,19 +182,19 @@ void MainWindow::on_newAction_triggered()
 
     MapInfo* map = new MapInfo(base);
 
-    if(!this->bakInfo)this->bakInfo =  new MapInfo(base);
+    if(!this->bakMapInfo)this->bakMapInfo =  new MapInfo(base);
 
     QString tname = tr("新地图");
     map->name = tname;
-    this->bakInfo->name = tname;
+    this->bakMapInfo->name = tname;
     map->background = QColor(Qt::black);
-    this->bakInfo->background = QColor(Qt::black);
+    this->bakMapInfo->background = QColor(Qt::black);
     map->height = 6;
-    this->bakInfo->height = 6;
+    this->bakMapInfo->height = 6;
     map->width = 8;
-    this->bakInfo->width = 8;
+    this->bakMapInfo->width = 8;
     map->type=1;
-    this->bakInfo->type = 1;
+    this->bakMapInfo->type = 1;
 
     QList<MapBase*> list = map->getMapBaseInfo();
     for(j=0;j < map->height;j++){
@@ -220,13 +221,13 @@ void MainWindow::on_openAction_triggered()
         MapInfo* map = new MapInfo(base);
 
         map->readMap(fileName);
-        if(!this->bakInfo)this->bakInfo =  new MapInfo(base);
+        if(!this->bakMapInfo)this->bakMapInfo =  new MapInfo(base);
 
-        this->bakInfo->name = map->name;
-        this->bakInfo->width = map->width;
-        this->bakInfo->height = map->height;
-        this->bakInfo->type = map->type;
-        this->bakInfo->background = map->background;
+        this->bakMapInfo->name = map->name;
+        this->bakMapInfo->width = map->width;
+        this->bakMapInfo->height = map->height;
+        this->bakMapInfo->type = map->type;
+        this->bakMapInfo->background = map->background;
 
         this->opened = true;
         this->initByMapInfo(map);
@@ -243,9 +244,9 @@ void MainWindow::on_saveAction_triggered()
         {
             filename = filename + ".mdt";
         }
-        this->curInfo->name = this->ui->lineEdit_name->text();
-        this->curInfo->type = QVariant(this->ui->lineEdit_type->text()).toUInt();
-        this->curInfo->writeMap(filename);
+        this->curMapInfo->name = this->ui->lineEdit_name->text();
+        this->curMapInfo->type = QVariant(this->ui->lineEdit_type->text()).toUInt();
+        this->curMapInfo->writeMap(filename);
     }else{
         QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
     }
@@ -332,8 +333,8 @@ void MainWindow::on_lineEdit_bgcolor_textEdited(QString colorname)
 {
     this->changed = true;
     this->ui->label_color->setStyleSheet(tr("QLabel{background:#%1}").arg(colorname));
-    this->curInfo->background = QColor("#"+colorname);
-    this->scene->setBackgroundBrush(this->curInfo->background);
+    this->curMapInfo->background = QColor("#"+colorname);
+    this->scene->setBackgroundBrush(this->curMapInfo->background);
 }
 
 //背景颜色选择
@@ -342,15 +343,15 @@ void MainWindow::on_pushButton_clicked()
 
     QColorDialog dialog(this);
     QColor color;
-    if(this->curInfo){
-        color = dialog.getColor(this->curInfo->background);
+    if(this->curMapInfo){
+        color = dialog.getColor(this->curMapInfo->background);
     }else{
         color = dialog.getColor(QColor("#"+this->ui->lineEdit_bgcolor->text()));
     }
     this->ui->lineEdit_bgcolor->setText(color.name().mid(1));
     this->ui->label_color->setStyleSheet(tr("QLabel{background:%1}").arg(color.name()));
-    this->curInfo->background = color;
-    this->scene->setBackgroundBrush(this->curInfo->background);
+    this->curMapInfo->background = color;
+    this->scene->setBackgroundBrush(this->curMapInfo->background);
 }
 
 //被选闪耀
@@ -371,20 +372,20 @@ void MainWindow::time_out()
 void MainWindow::on_width_spinBox_valueChanged(int value)
 {
 
-    if(this->curInfo){
-        if((unsigned int)value > this->curInfo->width ){
+    if(this->curMapInfo){
+        if((unsigned int)value > this->curMapInfo->width ){
             unsigned int i;
-            QList<MapBase*> list = this->curInfo->getMapBaseInfo();
-            for(i= 0 ; i < (((unsigned int)value - this->curInfo->width) * this->curInfo->height) ;i++){
-                MapBase* tmpbase = new MapBase(this->curInfo->base);
-                list.insert( (i+1)*this->curInfo->width + i ,tmpbase);
+            QList<MapBase*> list = this->curMapInfo->getMapBaseInfo();
+            for(i= 0 ; i < (((unsigned int)value - this->curMapInfo->width) * this->curMapInfo->height) ;i++){
+                MapBase* tmpbase = new MapBase(this->curMapInfo->base);
+                list.insert( (i+1)*this->curMapInfo->width + i ,tmpbase);
                 this->regHandleSignal(tmpbase);
             }
-            this->curInfo->width = (unsigned int)value;
+            this->curMapInfo->width = (unsigned int)value;
 
-            this->curInfo->setMapBaseInfo(list); //只能设置 get出来的list
+            this->curMapInfo->setMapBaseInfo(list); //只能设置 get出来的list
 
-            this->manager->initMap(this->curInfo);
+            this->manager->initMap(this->curMapInfo);
 
         }
     }
@@ -394,20 +395,20 @@ void MainWindow::on_width_spinBox_valueChanged(int value)
 void MainWindow::on_height_spinBox_valueChanged(int value)
 {
 
-    if(this->curInfo){
-        if( (unsigned int)value > this->curInfo->height ){
+    if(this->curMapInfo){
+        if( (unsigned int)value > this->curMapInfo->height ){
             unsigned int i;
-            QList<MapBase*> list = this->curInfo->getMapBaseInfo();
-            for(i= 0 ; i <this->curInfo->width ;i++){
-                MapBase* tmpbase = new MapBase(this->curInfo->base);
+            QList<MapBase*> list = this->curMapInfo->getMapBaseInfo();
+            for(i= 0 ; i <this->curMapInfo->width ;i++){
+                MapBase* tmpbase = new MapBase(this->curMapInfo->base);
                 list.append(tmpbase);
                 this->regHandleSignal(tmpbase);
             }
-            this->curInfo->height = (unsigned int)value;
+            this->curMapInfo->height = (unsigned int)value;
 
-            this->curInfo->setMapBaseInfo(list); //只能设置 get出来的list
+            this->curMapInfo->setMapBaseInfo(list); //只能设置 get出来的list
 
-            this->manager->initMap(this->curInfo);
+            this->manager->initMap(this->curMapInfo);
 
         }
     }
@@ -416,8 +417,8 @@ void MainWindow::on_height_spinBox_valueChanged(int value)
 
 void MainWindow::on_lineEdit_type_textChanged(const QString& type)
 {
-    if(this->curInfo){
-        this->curInfo->type = type.toInt();
+    if(this->curMapInfo){
+        this->curMapInfo->type = type.toInt();
     }
     qDebug() << "type is " <<  type;
 }
@@ -425,26 +426,26 @@ void MainWindow::on_lineEdit_type_textChanged(const QString& type)
 
 void MainWindow::on_lineEdit_name_textChanged(const QString& name)
 {
-    if(this->curInfo){
-        this->curInfo->name = name.toInt();
+    if(this->curMapInfo){
+        this->curMapInfo->name = name.toInt();
     }
     qDebug() << "name is " <<  name;
 }
 bool MainWindow::isChange(){
-    if(this->curInfo){  //检查属性变更
-        if(this->curInfo->name != this->bakInfo->name)
+    if(this->curMapInfo){  //检查属性变更
+        if(this->curMapInfo->name != this->bakMapInfo->name)
             this->changed = true;
 
-        if(this->curInfo->type != this->bakInfo->type)
+        if(this->curMapInfo->type != this->bakMapInfo->type)
             this->changed = true;
 
-        if(this->curInfo->width != this->bakInfo->width)
+        if(this->curMapInfo->width != this->bakMapInfo->width)
             this->changed = true;
 
-        if(this->curInfo->height != this->bakInfo->height)
+        if(this->curMapInfo->height != this->bakMapInfo->height)
             this->changed = true;
 
-        if(this->curInfo->background != this->bakInfo->background)
+        if(this->curMapInfo->background != this->bakMapInfo->background)
             this->changed = true;
     }
     return this->changed;
@@ -458,7 +459,7 @@ bool MainWindow::isOpen()
 void MainWindow::on_mapbaseViewAction_triggered(bool checked)
 {
     if(this->opened){
-        QList<MapBase*> baseList = this->curInfo->getMapBaseInfo();
+        QList<MapBase*> baseList = this->curMapInfo->getMapBaseInfo();
         foreach(MapBase* base,baseList){
             base->setVisible(checked);
         }
@@ -468,7 +469,7 @@ void MainWindow::on_mapbaseViewAction_triggered(bool checked)
 void MainWindow::on_mapitemViewAction_triggered(bool checked)
 {
     if(this->opened){
-        QList<MapItem*> itemList = this->curInfo->getMapItemInfo();
+        QList<MapItem*> itemList = this->curMapInfo->getMapItemInfo();
         foreach(MapItem* item,itemList){
             item->setVisible(checked);
         }
@@ -478,7 +479,14 @@ void MainWindow::on_mapitemViewAction_triggered(bool checked)
 void MainWindow::on_insertMapItemAction_triggered()
 {
     if(isOpen()){
-        InMapItemDialog dialog(this->curInfo,this->manager,this);
+        InMapItemDialog dialog(this->curMapInfo,this->manager,this);
         MapItem* insertItem = dialog.createMapItem();
+
+        if(insertItem){ //创建物件成功
+            this->curMapInfo->getMapItemsPtr()->append(insertItem); //加入到MapInfo里面
+            insertItem->updateLocation();
+            this->manager->addSprite(insertItem,insertItem->typeName,insertItem->mapZ);
+            if(this->ui->mapitemAction->isChecked())this->regHandleSignal(insertItem);
+        }
     }
 }
