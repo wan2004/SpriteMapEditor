@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QGraphicsScene>
+#include <QDrag>
 #include "sprite.h"
 #include "mapinfo.h"
 #include "mapitem.h"
@@ -33,7 +34,9 @@ private:
     MapInfo* bakMapInfo;
     MapBase* curSprite;
     QTimer* timer;
-    void regHandleSignal(Sprite* sprite);
+    QDrag* drag;
+    void regSignalForMapBase(MapBase* sprite);
+    void regSignalForMapItem(MapItem* sprite);
     void changeSelectBase(int mhindex,int mvindex);
     void initByMapInfo(MapInfo* map);
     bool opened;
@@ -58,6 +61,8 @@ private slots:
     void on_mapbaseViewAction_triggered(bool checked);
     void on_mapitemViewAction_triggered(bool checked);
     void on_insertMapItemAction_triggered();
+    void map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn);
+    void map_item_end_drag(qreal mx,qreal my,Qt::MouseButtons btn);
 };
 
 #endif // MAINWINDOW_H

@@ -21,6 +21,45 @@ const char* DEF_BASE = "base1.png";
 
 static QString base(DEF_BASE);
 
+MainWindow::MainWindow(QWidget *parent) :
+        QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    opened(false),
+    changed(false)
+{
+
+    scene = new QGraphicsScene(this);
+    itemSelectScene = new QGraphicsScene(this);
+    timer = new QTimer(this);
+    curMapInfo = 0;
+    bakMapInfo = 0;
+    curSprite = 0;
+    select = 0;
+    drag = 0;
+    baseItems = new Sprite();
+    manager = new MapManager(scene);
+    ui->setupUi(this); //选择背景图片
+
+    this->timer->setInterval(500);
+    connect(this->timer,SIGNAL(timeout()),this,SLOT(time_out()));
+
+    //初始化布局大小
+    //this->setWindowFlags(Qt::WindowMinimizeButtonHint);
+    this->setFixedSize(this->width(),this->height());
+
+    this->ui->graphicsView->setScene(this->scene);
+
+    this->ui->items_GraphicsView->setScene(this->itemSelectScene);
+
+    connect(this->baseItems,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(base_items_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
+
+}
+
+MainWindow::~MainWindow()
+{
+
+}
+
 //初始化地图
 void MainWindow::initByMapInfo(MapInfo *map)
 {
@@ -44,12 +83,13 @@ void MainWindow::initByMapInfo(MapInfo *map)
     int i;
     QList<MapBase*> list = this->curMapInfo->getMapBaseInfo();
     for(i=0;i<list.length();i++){
-        this->regHandleSignal(list.at(i));
+        this->regSignalForMapBase(list.at(i));
     }
     QList<MapItem*> list1 = this->curMapInfo->getMapItemInfo();
-    for(i=0;i<list1.length();i++){
-        //this->regHandleSignal(list1.at(i));//物品无初始化事件
 
+    for(i=0;i<list1.length();i++){
+        //this->regSignalForMapBase(list1.at(i));//物品无初始化事件
+        list1.at(i)->setAcceptDrops(true);
     }
     this->manager->initMap(this->curMapInfo);
 
@@ -58,11 +98,6 @@ void MainWindow::initByMapInfo(MapInfo *map)
     this->itemSelectScene->update();
     this->ui->items_GraphicsView->scroll(0,0);
 
-    //QGraphicsItemGroup* group = this->scene->createItemGroup(this->scene->items());
-    //group->setPos(100,100);
-    //this->scene->destroyItemGroup(group);
-    //
-    //this->scene->setSceneRect(0,0,780,600);
 }
 //在选择区选择时加入的选区范围图示
 void MainWindow::changeSelectBase(int mhindex,int mvindex)
@@ -77,45 +112,21 @@ void MainWindow::changeSelectBase(int mhindex,int mvindex)
                                           );
 
 }
-void MainWindow::regHandleSignal(Sprite* sprite)
+void MainWindow::regSignalForMapBase(MapBase* base)
 {
-    sprite->setFlags(QGraphicsItem::ItemIsFocusable);
-    this->connect(sprite,SIGNAL(onKeyRelease(int)),this,SLOT(map_base_on_press(int)));
-    this->connect(sprite,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_base_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
-}
-MainWindow::MainWindow(QWidget *parent) :
-        QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    opened(false),
-    changed(false)
-{
-
-    scene = new QGraphicsScene(this);
-    itemSelectScene = new QGraphicsScene(this);
-    timer = new QTimer(this);
-    curMapInfo = 0;
-    bakMapInfo = 0;
-    curSprite = 0;
-    select = 0;
-    baseItems = new Sprite();
-    manager = new MapManager(scene);
-    ui->setupUi(this); //选择背景图片
-
-    this->timer->setInterval(500);
-    connect(this->timer,SIGNAL(timeout()),this,SLOT(time_out()));
-    this->setWindowFlags(Qt::WindowMinimizeButtonHint);
-    this->ui->graphicsView->setScene(this->scene);
-    //connect(ui->mapitemAction,SIGNAL(triggered()),this,SLOT(on_mapitemAction_triggered()));
-    this->ui->items_GraphicsView->setScene(this->itemSelectScene);
-    //this->ui->items_GraphicsView->setSceneRect(0,0,800,600);
-    connect(this->baseItems,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(base_items_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
-}
-
-MainWindow::~MainWindow()
-{
+    base->setFlags(QGraphicsItem::ItemIsFocusable);
+    this->connect(base,SIGNAL(onKeyRelease(int)),this,SLOT(map_base_on_press(int)));
+    this->connect(base,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_base_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
 
 }
 
+void MainWindow::regSignalForMapItem(MapItem *item)
+{
+    item->setFlags(QGraphicsItem::ItemIsFocusable);
+
+    connect(item,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_item_start_drag(qreal,qreal,Qt::MouseButtons)));
+    connect(item,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_item_end_drag(qreal,qreal,Qt::MouseButtons)));
+}
 //贴图区-物件单击
 void MainWindow::base_items_on_mouse_press(qreal x,qreal y,Qt::MouseButtons button)
 {
@@ -145,8 +156,9 @@ void MainWindow::on_mapitemAction_triggered(bool checked)
         }
         size = this->curMapInfo->getMapItemInfo().size();
         for(int i = 0; i < size ;i++){
-            Sprite* sprite = this->curMapInfo->getMapItemInfo().at(i);
-            this->regHandleSignal(sprite);
+            MapItem* sprite = this->curMapInfo->getMapItemInfo().at(i);
+            this->regSignalForMapItem(sprite);
+
         }
     }else{
         static_cast<QAction*>(this->sender())->setChecked(!checked);
@@ -166,8 +178,8 @@ void MainWindow::on_mapbaseAction_triggered(bool checked)
         }
         size = this->curMapInfo->getMapBaseInfo().size();
         for(int i = 0; i < size ;i++){
-            Sprite* sprite = this->curMapInfo->getMapBaseInfo().at(i);
-            this->regHandleSignal(sprite);
+            MapBase* sprite = this->curMapInfo->getMapBaseInfo().at(i);
+            this->regSignalForMapBase(sprite);
         }
     }else{
         static_cast<QAction*>(this->sender())->setChecked(!checked);
@@ -379,7 +391,7 @@ void MainWindow::on_width_spinBox_valueChanged(int value)
             for(i= 0 ; i < (((unsigned int)value - this->curMapInfo->width) * this->curMapInfo->height) ;i++){
                 MapBase* tmpbase = new MapBase(this->curMapInfo->base);
                 list.insert( (i+1)*this->curMapInfo->width + i ,tmpbase);
-                this->regHandleSignal(tmpbase);
+                this->regSignalForMapBase(tmpbase);
             }
             this->curMapInfo->width = (unsigned int)value;
 
@@ -402,7 +414,7 @@ void MainWindow::on_height_spinBox_valueChanged(int value)
             for(i= 0 ; i <this->curMapInfo->width ;i++){
                 MapBase* tmpbase = new MapBase(this->curMapInfo->base);
                 list.append(tmpbase);
-                this->regHandleSignal(tmpbase);
+                this->regSignalForMapBase(tmpbase);
             }
             this->curMapInfo->height = (unsigned int)value;
 
@@ -486,7 +498,44 @@ void MainWindow::on_insertMapItemAction_triggered()
             this->curMapInfo->getMapItemsPtr()->append(insertItem); //加入到MapInfo里面
             insertItem->updateLocation();
             this->manager->addSprite(insertItem,insertItem->typeName,insertItem->mapZ);
-            if(this->ui->mapitemAction->isChecked())this->regHandleSignal(insertItem);
+            if(this->ui->mapitemAction->isChecked())this->regSignalForMapItem(insertItem);
         }
+    }
+}
+
+//
+void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
+{
+    MapBase* base = (MapBase*)(sender());
+    if(btn == Qt::LeftButton){
+
+        if(this->curSprite)this->curSprite->show();
+        this->curSprite = base;
+
+            this->drag = new QDrag(this);
+            QMimeData* data = new QMimeData();
+            this->drag->setMimeData(data);
+
+        QPixmap pixmap(this->curSprite->getWidth(),this->curSprite->getHeight());
+        QPainter painter(&pixmap);
+
+        pixmap.fill(Qt::white);
+        this->curSprite->paint(&painter,0,0);
+
+        this->drag->setPixmap(pixmap);
+        this->drag->setHotSpot(QPoint(15,15));
+        qDebug() << "call 1" ;
+        this->drag->exec();
+        delete drag;
+    }
+}
+
+void MainWindow::map_item_end_drag(qreal mx, qreal my, Qt::MouseButtons btn)
+{
+    if(this->curSprite){
+        qDebug() << "call 2" ;
+        this->curSprite->setPos(mx - static_cast<int>(mx) % DEF_MAPBASE_WIDTH,
+                                my - static_cast<int>(my) % DEF_MAPBASE_HEIGHT);
+
     }
 }
