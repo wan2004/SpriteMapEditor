@@ -5,6 +5,7 @@
 #include "mapmanager.h"
 #include "sprite.h"
 #include "inmapitemdialog.h"
+#include "dragreceiveritem.h"
 #include <QObject>
 #include <QCloseEvent>
 #include <QMessageBox>
@@ -40,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     manager = new MapManager(scene);
     ui->setupUi(this); //选择背景图片
 
-    this->timer->setInterval(500);
+    this->timer->setInterval(600);
     connect(this->timer,SIGNAL(timeout()),this,SLOT(time_out()));
 
     //初始化布局大小
@@ -89,7 +90,7 @@ void MainWindow::initByMapInfo(MapInfo *map)
 
     for(i=0;i<list1.length();i++){
         //this->regSignalForMapBase(list1.at(i));//物品无初始化事件
-        list1.at(i)->setAcceptDrops(true);
+        //list1.at(i)->setAcceptDrops(true);
     }
     this->manager->initMap(this->curMapInfo);
 
@@ -112,6 +113,7 @@ void MainWindow::changeSelectBase(int mhindex,int mvindex)
                                           );
 
 }
+//连接 基本贴图点击信号
 void MainWindow::regSignalForMapBase(MapBase* base)
 {
     base->setFlags(QGraphicsItem::ItemIsFocusable);
@@ -119,13 +121,13 @@ void MainWindow::regSignalForMapBase(MapBase* base)
     this->connect(base,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_base_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
 
 }
-
+//连接 物件点击信号
 void MainWindow::regSignalForMapItem(MapItem *item)
 {
     item->setFlags(QGraphicsItem::ItemIsFocusable);
 
     connect(item,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_item_start_drag(qreal,qreal,Qt::MouseButtons)));
-    connect(item,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_item_end_drag(qreal,qreal,Qt::MouseButtons)));
+
 }
 //贴图区-物件单击
 void MainWindow::base_items_on_mouse_press(qreal x,qreal y,Qt::MouseButtons button)
@@ -147,12 +149,12 @@ void MainWindow::base_items_on_mouse_press(qreal x,qreal y,Qt::MouseButtons butt
 void MainWindow::on_mapitemAction_triggered(bool checked)
 {
     if(opened){
-        qDebug()<< checked ;
+
         ui->mapbaseAction->setChecked(!checked);
         int size = this->curMapInfo->getMapBaseInfo().size();
         for(int i = 0; i < size ;i++){
             Sprite* sprite = this->curMapInfo->getMapBaseInfo().at(i);
-            sprite->disconnect(sprite,0,this,0);
+            sprite->disconnect(sprite,0,this,0);  //取消型号连接
         }
         size = this->curMapInfo->getMapItemInfo().size();
         for(int i = 0; i < size ;i++){
@@ -169,7 +171,7 @@ void MainWindow::on_mapitemAction_triggered(bool checked)
 void MainWindow::on_mapbaseAction_triggered(bool checked)
 {
     if(opened){
-        qDebug()<< checked;
+
         ui->mapitemAction->setChecked(!checked);
         int size = this->curMapInfo->getMapItemInfo().size();
         for(int i = 0; i < size ;i++){
@@ -427,6 +429,7 @@ void MainWindow::on_height_spinBox_valueChanged(int value)
     qDebug() << "value is " <<  value;
 }
 
+//修改地图类型
 void MainWindow::on_lineEdit_type_textChanged(const QString& type)
 {
     if(this->curMapInfo){
@@ -439,10 +442,13 @@ void MainWindow::on_lineEdit_type_textChanged(const QString& type)
 void MainWindow::on_lineEdit_name_textChanged(const QString& name)
 {
     if(this->curMapInfo){
-        this->curMapInfo->name = name.toInt();
+        this->curMapInfo->name = name;
     }
     qDebug() << "name is " <<  name;
 }
+/*
+  检测当前文档熟悉是否变更
+  */
 bool MainWindow::isChange(){
     if(this->curMapInfo){  //检查属性变更
         if(this->curMapInfo->name != this->bakMapInfo->name)
@@ -460,6 +466,7 @@ bool MainWindow::isChange(){
         if(this->curMapInfo->background != this->bakMapInfo->background)
             this->changed = true;
     }
+
     return this->changed;
 }
 
@@ -506,15 +513,23 @@ void MainWindow::on_insertMapItemAction_triggered()
 //
 void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
 {
-    MapBase* base = (MapBase*)(sender());
-    if(btn == Qt::LeftButton){
+    MapBase* base = static_cast<MapBase*>(sender());
 
-        if(this->curSprite)this->curSprite->show();
+
+    if(btn == Qt::LeftButton){
+        DragReceiverItem* obj = new DragReceiverItem( curMapInfo->width, curMapInfo->height, DEF_MAPBASE_WIDTH, DEF_MAPBASE_HEIGHT);
+
+        connect(obj,SIGNAL(onDrop(QPointF,const QMimeData*)),this,SLOT(map_item_end_drag(QPointF,const QMimeData*)));
+
+        this->manager->addSprite(obj,"frame");
         this->curSprite = base;
 
-            this->drag = new QDrag(this);
-            QMimeData* data = new QMimeData();
-            this->drag->setMimeData(data);
+        if(this->curSprite)this->curSprite->show();
+
+        this->drag = new QDrag(this);
+
+        QMimeData* data = new QMimeData();
+        this->drag->setMimeData(data);
 
         QPixmap pixmap(this->curSprite->getWidth(),this->curSprite->getHeight());
         QPainter painter(&pixmap);
@@ -524,18 +539,33 @@ void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
 
         this->drag->setPixmap(pixmap);
         this->drag->setHotSpot(QPoint(15,15));
-        qDebug() << "call 1" ;
-        this->drag->exec();
+
+        this->drag->exec();   //开始拖拽, 释放拖拽执行下面代码
+
+        this->manager->removeSprite(obj,"frame");
+
+        disconnect(obj);
+
         delete drag;
+        delete obj;
     }
 }
 
-void MainWindow::map_item_end_drag(qreal mx, qreal my, Qt::MouseButtons btn)
+void MainWindow::map_item_end_drag(QPointF pos,const QMimeData* data)
 {
     if(this->curSprite){
-        qDebug() << "call 2" ;
-        this->curSprite->setPos(mx - static_cast<int>(mx) % DEF_MAPBASE_WIDTH,
+        qreal mx = pos.x();
+        qreal my = pos.y();
+        MapItem* tmp_item = static_cast<MapItem*>(this->curSprite);
+        tmp_item->setPos(mx - static_cast<int>(mx) % DEF_MAPBASE_WIDTH,
                                 my - static_cast<int>(my) % DEF_MAPBASE_HEIGHT);
+        int x_bak = tmp_item->mapX;
+        int y_bak = tmp_item->mapY;
+
+        tmp_item->mapX = mx / static_cast<qreal>(DEF_MAPBASE_WIDTH);
+        tmp_item->mapY = my / static_cast<qreal>(DEF_MAPBASE_HEIGHT);
+        if(x_bak != tmp_item->mapX || y_bak != tmp_item->mapY)
+            this->changed =true;
 
     }
 }

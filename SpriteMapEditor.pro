@@ -7,7 +7,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    inmapitemdialog.cpp
+    inmapitemdialog.cpp \
+    dragreceiveritem.cpp
 
 HEADERS  += mainwindow.h\
             mapinfo.h\
@@ -15,7 +16,8 @@ HEADERS  += mainwindow.h\
             mapmanager.h\
             sprite.h \
     mapitem.h \
-    inmapitemdialog.h
+    inmapitemdialog.h \
+    dragreceiveritem.h
 
 FORMS    += mainwindow.ui \
     inmapitemdialog.ui

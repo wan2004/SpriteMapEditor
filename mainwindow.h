@@ -62,7 +62,7 @@ private slots:
     void on_mapitemViewAction_triggered(bool checked);
     void on_insertMapItemAction_triggered();
     void map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn);
-    void map_item_end_drag(qreal mx,qreal my,Qt::MouseButtons btn);
+    void map_item_end_drag(QPointF pos,const QMimeData* data);
 };
 
 #endif // MAINWINDOW_H
