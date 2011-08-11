@@ -34,12 +34,12 @@ DragReceiverItem::~DragReceiverItem()
 }
 void DragReceiverItem::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 {
-    qDebug() << "drag enter evnet";
+    //qDebug() << "drag enter evnet";
 }
 
 void DragReceiverItem::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)
 {
-    qDebug() << "drag leave evnet";
+    //qDebug() << "drag leave evnet";
 }
 
 void DragReceiverItem::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
@@ -49,11 +49,13 @@ void DragReceiverItem::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
 
 void DragReceiverItem::dropEvent(QGraphicsSceneDragDropEvent *event)
 {
+    /*
     qDebug() << "drop event " ;
     qDebug() << "pos =  " << event->pos();
     qDebug() << "scene pos = " << event->scenePos();
     qDebug() << "screen pos = " << event->screenPos();
     qDebug() << "mime data = " << event->mimeData();
+    */
     emit onDrop(event->scenePos(),event->mimeData());
 }
 

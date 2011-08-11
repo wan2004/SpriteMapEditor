@@ -21,6 +21,7 @@ public:
     ~MainWindow();
     bool isOpen();
     bool isChange();
+
 protected:
     void closeEvent( QCloseEvent * event );
 private:

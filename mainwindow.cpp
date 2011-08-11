@@ -17,6 +17,8 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include <QPixmap>
+#include <QBitmap>
+#include <typeinfo>
 
 const char* DEF_BASE = "base1.png";
 
@@ -54,18 +56,28 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this->baseItems,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(base_items_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
 
+    if(!this->timer->isActive()){
+        this->timer->start();
+    }
+    delete select;
 }
 
 MainWindow::~MainWindow()
 {
-
+    delete this->timer;
+    delete this->curMapInfo;
+    delete this->select;
+    delete this->ui;
+    delete this->scene;
+    delete this->baseItems;
 }
+
 
 //初始化地图
 void MainWindow::initByMapInfo(MapInfo *map)
 {
-
-    if(this->curMapInfo)delete this->curMapInfo;
+    this->curSprite = 0;     //必须设置为0后在删除，因为timer时刻正访问curSprite
+    delete this->curMapInfo; //不能删除this->curSprite 因为已包含在curMapInfo中
 
     this->curMapInfo = map;
 
@@ -91,6 +103,8 @@ void MainWindow::initByMapInfo(MapInfo *map)
     for(i=0;i<list1.length();i++){
         //this->regSignalForMapBase(list1.at(i));//物品无初始化事件
         //list1.at(i)->setAcceptDrops(true);
+        list1.at(i)->setFlags(QGraphicsItem::ItemIsFocusable);
+
     }
     this->manager->initMap(this->curMapInfo);
 
@@ -103,7 +117,7 @@ void MainWindow::initByMapInfo(MapInfo *map)
 //在选择区选择时加入的选区范围图示
 void MainWindow::changeSelectBase(int mhindex,int mvindex)
 {
-    if(select)delete select;
+    delete select;
     select = itemSelectScene->addRect( mhindex * curSprite->sizeH ,
                                           mvindex * curSprite->sizeV ,
                                           curSprite->sizeH ,
@@ -117,15 +131,15 @@ void MainWindow::changeSelectBase(int mhindex,int mvindex)
 void MainWindow::regSignalForMapBase(MapBase* base)
 {
     base->setFlags(QGraphicsItem::ItemIsFocusable);
-    this->connect(base,SIGNAL(onKeyRelease(int)),this,SLOT(map_base_on_press(int)));
-    this->connect(base,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_base_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
+    connect(base,SIGNAL(onKeyRelease(int)),this,SLOT(map_base_on_press(int)));
+    connect(base,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_base_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
 
 }
 //连接 物件点击信号
 void MainWindow::regSignalForMapItem(MapItem *item)
 {
     item->setFlags(QGraphicsItem::ItemIsFocusable);
-
+    connect(item,SIGNAL(onKeyRelease(int)),this,SLOT(map_base_on_press(int)));
     connect(item,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_item_start_drag(qreal,qreal,Qt::MouseButtons)));
 
 }
@@ -142,7 +156,6 @@ void MainWindow::base_items_on_mouse_press(qreal x,qreal y,Qt::MouseButtons butt
         this->curSprite->hindex =_hindex;
         this->curSprite->vindex =_vindex;
     }
-
 }
 
 //编辑-物品贴图
@@ -160,7 +173,6 @@ void MainWindow::on_mapitemAction_triggered(bool checked)
         for(int i = 0; i < size ;i++){
             MapItem* sprite = this->curMapInfo->getMapItemInfo().at(i);
             this->regSignalForMapItem(sprite);
-
         }
     }else{
         static_cast<QAction*>(this->sender())->setChecked(!checked);
@@ -279,9 +291,18 @@ void MainWindow::map_base_on_press(int key)
         base->hindex = 0;
         base->vindex = 0;
         base->update();
+    }else if(key == Qt::Key_Delete){
+
+        if(typeid(*(this->curSprite)) == typeid(MapItem)){ //RTTI 判断类型为MapItem时可以删除
+            MapItem* item = dynamic_cast<MapItem*>(this->curSprite);
+            this->manager->removeSprite(item,item->typeName);
+            this->curMapInfo->getMapItemsPtr()->removeAll(item);
+            delete item;
+            this->curSprite = 0;
+        }
     }
 
-    qDebug()<< "key_press" ;
+    qDebug()<< "key_press = " << key ;
 }
 //退出
 void MainWindow::on_exitAction_triggered()
@@ -308,7 +329,7 @@ void MainWindow::map_base_on_mouse_press(qreal x,qreal y,Qt::MouseButtons btns)
     MapBase* base = (MapBase*)(sender());
     if(btns == Qt::LeftButton){
 
-        if(this->curSprite)this->curSprite->show();
+        if(this->curSprite)this->curSprite->setOpacity(1);
         this->curSprite = base;
         this->ui->statusBar->clearMessage ();
         this->ui->statusBar->showMessage (" hindex:(" +
@@ -372,10 +393,10 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::time_out()
 {
     if(this->curSprite){
-        if(this->curSprite->isVisible())
-            this->curSprite->hide();
+        if(this->curSprite->opacity() == 1)
+            this->curSprite->setOpacity(0.5);
         else
-            this->curSprite->show();
+            this->curSprite->setOpacity(1);
     }
 }
 
@@ -510,11 +531,10 @@ void MainWindow::on_insertMapItemAction_triggered()
     }
 }
 
-//
+//贴图文件开始拖动
 void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
 {
     MapBase* base = static_cast<MapBase*>(sender());
-
 
     if(btn == Qt::LeftButton){
         DragReceiverItem* obj = new DragReceiverItem( curMapInfo->width, curMapInfo->height, DEF_MAPBASE_WIDTH, DEF_MAPBASE_HEIGHT);
@@ -522,9 +542,10 @@ void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
         connect(obj,SIGNAL(onDrop(QPointF,const QMimeData*)),this,SLOT(map_item_end_drag(QPointF,const QMimeData*)));
 
         this->manager->addSprite(obj,"frame");
+        if(this->curSprite)this->curSprite->setOpacity(1); //恢复上个贴图显示
         this->curSprite = base;
 
-        if(this->curSprite)this->curSprite->show();
+        if(this->curSprite)this->curSprite->setOpacity(1);
 
         this->drag = new QDrag(this);
 
@@ -534,7 +555,7 @@ void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
         QPixmap pixmap(this->curSprite->getWidth(),this->curSprite->getHeight());
         QPainter painter(&pixmap);
 
-        pixmap.fill(Qt::white);
+        //pixmap.fill(Qt::white);
         this->curSprite->paint(&painter,0,0);
 
         this->drag->setPixmap(pixmap);
@@ -546,11 +567,12 @@ void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
 
         disconnect(obj);
 
+
         delete drag;
         delete obj;
     }
 }
-
+//贴图文件结束拖动
 void MainWindow::map_item_end_drag(QPointF pos,const QMimeData* data)
 {
     if(this->curSprite){
