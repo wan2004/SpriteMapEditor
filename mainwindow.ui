@@ -246,6 +246,8 @@
     <addaction name="mapitemAction"/>
     <addaction name="separator"/>
     <addaction name="insertMapItemAction"/>
+    <addaction name="copyMapItemAction"/>
+    <addaction name="pasteMapItemAction"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -398,6 +400,28 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="copyMapItemAction">
+   <property name="text">
+    <string>复制物件</string>
+   </property>
+   <property name="toolTip">
+    <string>复制物件 Ctrl+C</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="pasteMapItemAction">
+   <property name="text">
+    <string>粘贴物件</string>
+   </property>
+   <property name="toolTip">
+    <string>粘贴物件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
    </property>
   </action>
  </widget>

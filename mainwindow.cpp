@@ -591,3 +591,34 @@ void MainWindow::map_item_end_drag(QPointF pos,const QMimeData* data)
 
     }
 }
+
+void MainWindow::on_copyMapItemAction_triggered()
+{
+    if(this->curSprite && typeid(*this->curSprite) == typeid(MapItem)){
+        MapItem* curItem = dynamic_cast<MapItem*>(this->curSprite);
+        MapItem* item = new MapItem(this->curMapInfo->base);
+        item->hindex = curItem->hindex;
+        item->vindex = curItem->vindex;
+        item->setIColnum(curItem->iColnum);
+        item->setIRownum(curItem->iRownum);
+        item->sizeV = curItem->sizeV;
+        item->sizeH = curItem->sizeH;
+        item->mapZ = curItem->mapZ;
+        item->mapX = 1;
+        item->mapY = 1;
+        item->special = curItem->special;
+        item->crossType = curItem->crossType;
+        item->checkType = curItem->checkType;
+        item->typeName = curItem->typeName;
+        item->updateLocation();
+        this->manager->addSprite(item,item->typeName,item->mapZ);
+        this->curMapInfo->getMapItemsPtr()->append(item);
+    }else{
+        QMessageBox::information(this,tr("操作错误"),tr("请选择一个物品"));
+    }
+}
+
+void MainWindow::on_pasteMapItemAction_triggered()
+{
+
+}
