@@ -21,7 +21,7 @@ public:
     ~MainWindow();
     bool isOpen();
     bool isChange();
-
+    MapItem* copyItem;
 protected:
     void closeEvent( QCloseEvent * event );
 private:
@@ -40,6 +40,7 @@ private:
     void regSignalForMapItem(MapItem* sprite);
     void changeSelectBase(int mhindex,int mvindex);
     void initByMapInfo(MapInfo* map);
+    void reset();
     bool opened;
     bool changed;
 private slots:

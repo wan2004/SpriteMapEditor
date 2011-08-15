@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
     curSprite = 0;
     select = 0;
     drag = 0;
+    copyItem = 0;
     baseItems = new Sprite();
     manager = new MapManager(scene);
     ui->setupUi(this); //选择背景图片
@@ -53,6 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->graphicsView->setScene(this->scene);
 
     this->ui->items_GraphicsView->setScene(this->itemSelectScene);
+
+    this->ui->pasteMapItemAction->setEnabled(false);  //粘贴一开始失效
 
     connect(this->baseItems,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(base_items_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
 
@@ -70,15 +73,22 @@ MainWindow::~MainWindow()
     delete this->ui;
     delete this->scene;
     delete this->baseItems;
+    delete this->itemSelectScene;
 }
 
-
+void MainWindow::reset()
+{
+    this->ui->mapitemViewAction->setCheckable(true);
+    this->ui->mapbaseViewAction->setCheckable(true);
+    this->scene->clear();
+}
 //初始化地图
 void MainWindow::initByMapInfo(MapInfo *map)
 {
+
     this->curSprite = 0;     //必须设置为0后在删除，因为timer时刻正访问curSprite
     delete this->curMapInfo; //不能删除this->curSprite 因为已包含在curMapInfo中
-
+    reset();
     this->curMapInfo = map;
 
     this->ui->lineEdit_name->setText(this->curMapInfo->name);
@@ -101,8 +111,7 @@ void MainWindow::initByMapInfo(MapInfo *map)
     QList<MapItem*> list1 = this->curMapInfo->getMapItemInfo();
 
     for(i=0;i<list1.length();i++){
-        //this->regSignalForMapBase(list1.at(i));//物品无初始化事件
-        //list1.at(i)->setAcceptDrops(true);
+
         list1.at(i)->setFlags(QGraphicsItem::ItemIsFocusable);
 
     }
@@ -133,7 +142,6 @@ void MainWindow::regSignalForMapBase(MapBase* base)
     base->setFlags(QGraphicsItem::ItemIsFocusable);
     connect(base,SIGNAL(onKeyRelease(int)),this,SLOT(map_base_on_press(int)));
     connect(base,SIGNAL(onMousePress(qreal,qreal,Qt::MouseButtons)),this,SLOT(map_base_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
-
 }
 //连接 物件点击信号
 void MainWindow::regSignalForMapItem(MapItem *item)
@@ -559,7 +567,7 @@ void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
         this->curSprite->paint(&painter,0,0);
 
         this->drag->setPixmap(pixmap);
-        this->drag->setHotSpot(QPoint(15,15));
+        this->drag->setHotSpot(QPoint(this->curSprite->getWidth() / 2,this->curSprite->getHeight() / 2));
 
         this->drag->exec();   //开始拖拽, 释放拖拽执行下面代码
 
@@ -592,6 +600,8 @@ void MainWindow::map_item_end_drag(QPointF pos,const QMimeData* data)
     }
 }
 
+
+//编辑-复制物件
 void MainWindow::on_copyMapItemAction_triggered()
 {
     if(this->curSprite && typeid(*this->curSprite) == typeid(MapItem)){
@@ -611,14 +621,20 @@ void MainWindow::on_copyMapItemAction_triggered()
         item->checkType = curItem->checkType;
         item->typeName = curItem->typeName;
         item->updateLocation();
-        this->manager->addSprite(item,item->typeName,item->mapZ);
-        this->curMapInfo->getMapItemsPtr()->append(item);
+        this->copyItem = item;
+        this->ui->pasteMapItemAction->setEnabled(true);
     }else{
         QMessageBox::information(this,tr("操作错误"),tr("请选择一个物品"));
     }
 }
 
+//编辑-粘贴物件
 void MainWindow::on_pasteMapItemAction_triggered()
 {
-
+    if(this->copyItem){
+        MapItem* item = this->copyItem;
+        this->manager->addSprite(item,item->typeName,item->mapZ);
+        this->curMapInfo->getMapItemsPtr()->append(item);
+        this->regSignalForMapItem(item);
+    }
 }
