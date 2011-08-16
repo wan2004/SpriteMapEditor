@@ -10,18 +10,23 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include <QSlider>
-InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *parent) :
+InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,MapItem* mapitem,QWidget *parent) :
     QDialog(parent),
     mapInfo(mapinfo),
     mapManager(manager),
-    returnItem(0),
+    returnItem(mapitem),
     selectScene(new QGraphicsScene(this)),
     selectRect(0),
     baseItems(new Sprite()),
     ui(new Ui::InMapItemDialog)
 {
     ui->setupUi(this);
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("确定"));
+    if(returnItem){
+        ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("修改"));
+    }else{
+        ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("确定"));
+    }
+
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("取消"));
 
     ui->tileHeight->setSingleStep(DEF_MAPBASE_HEIGHT);
@@ -43,9 +48,28 @@ InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *p
     connect(baseItems,SIGNAL(onMouseRelease(qreal,qreal,Qt::MouseButtons)),this,SLOT(select_item_on_mouse_press(qreal,qreal,Qt::MouseButtons)));
     this->selectScene->addItem(baseItems);
 
-    this->returnItem = new MapItem(this->mapInfo->base);
+    if(this->returnItem){ //判断是否是修改MapItem对象
+        this->ui->checkTypeBox->setValue(this->returnItem->checkType);
 
-    select_item_on_mouse_press(1.0,1.0,0); // 默认选择贴图1,1
+        this->ui->crossTypeBox->setValue(this->returnItem->crossType);
+
+        this->ui->tileWidth->setValue(this->returnItem->iColnum);
+        this->ui->tileWidthLabel->setNum(this->returnItem->getWidth());
+        this->ui->tileHeight->setValue(this->returnItem->iRownum);
+        this->ui->tileHeightLabel->setNum(this->returnItem->getHeight());
+        this->ui->xSpinBox->setValue(this->returnItem->mapX);
+        this->ui->ySpinBox->setValue(this->returnItem->mapY);
+        this->ui->zSpinBox->setValue(this->returnItem->mapZ);
+        this->ui->specialSpinBox->setValue(this->returnItem->special);
+        this->ui->staminaSpinBox->setValue(this->returnItem->breakType);
+        this->ui->itemNameEdit->setText(this->returnItem->typeName);
+        this->changeSelectBase(this->returnItem->hindex,this->returnItem->vindex);
+
+    }else{
+        this->returnItem = new MapItem(this->mapInfo->base);
+        select_item_on_mouse_press(1.0,1.0,0); // 默认选择贴图1,1
+    }
+
 }
 
 InMapItemDialog::~InMapItemDialog()

@@ -246,6 +246,7 @@
     <addaction name="mapitemAction"/>
     <addaction name="separator"/>
     <addaction name="insertMapItemAction"/>
+    <addaction name="changeMapItemAction"/>
     <addaction name="copyMapItemAction"/>
     <addaction name="pasteMapItemAction"/>
    </widget>
@@ -422,6 +423,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="changeMapItemAction">
+   <property name="text">
+    <string>修改物件</string>
+   </property>
+   <property name="toolTip">
+    <string>修改物件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
  </widget>

@@ -18,7 +18,7 @@ class InMapItemDialog : public QDialog
     Q_OBJECT
 
 public:
-    InMapItemDialog(MapInfo* mapinfo,MapManager* manager,QWidget *parent = 0);
+    InMapItemDialog(MapInfo* mapinfo,MapManager* manager,MapItem* mapitem = 0,QWidget *parent = 0);
     ~InMapItemDialog();
     MapItem* createMapItem();
 protected:

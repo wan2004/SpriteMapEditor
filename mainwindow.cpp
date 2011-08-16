@@ -104,21 +104,24 @@ void MainWindow::initByMapInfo(MapInfo *map)
     this->ui->height_spinBox->setValue(this->curMapInfo->height);
 
     int i;
-    QList<MapBase*> list = this->curMapInfo->getMapBaseInfo();
-    for(i=0;i<list.length();i++){
-        this->regSignalForMapBase(list.at(i));
+
+    if(this->ui->mapbaseAction->isChecked()){//根据菜单选择状态 初始化操作
+        QList<MapBase*> list = this->curMapInfo->getMapBaseInfo();
+        for(i=0;i<list.length();i++){
+            this->regSignalForMapBase(list.at(i));
+        }
+    }else if(this->ui->mapitemAction->isChecked()){
+        QList<MapItem*> list1 = this->curMapInfo->getMapItemInfo();
+        for(i=0;i<list1.length();i++){
+            this->regSignalForMapItem(list1.at(i));
+        }
     }
-    QList<MapItem*> list1 = this->curMapInfo->getMapItemInfo();
 
-    for(i=0;i<list1.length();i++){
-
-        list1.at(i)->setFlags(QGraphicsItem::ItemIsFocusable);
-
-    }
     this->manager->initMap(this->curMapInfo);
 
-    this->baseItems->setPixmap(this->curMapInfo->base);
-    this->itemSelectScene->addItem(this->baseItems);
+    this->baseItems->setPixmap(this->curMapInfo->base);   //更新选择贴图区基本图片
+    if(!this->itemSelectScene->items().contains(this->baseItems))
+        this->itemSelectScene->addItem(this->baseItems);
     this->itemSelectScene->update();
     this->ui->items_GraphicsView->scroll(0,0);
 
@@ -527,7 +530,7 @@ void MainWindow::on_mapitemViewAction_triggered(bool checked)
 void MainWindow::on_insertMapItemAction_triggered()
 {
     if(isOpen()){
-        InMapItemDialog dialog(this->curMapInfo,this->manager,this);
+        InMapItemDialog dialog(this->curMapInfo,this->manager,0,this);
         MapItem* insertItem = dialog.createMapItem();
 
         if(insertItem){ //创建物件成功
@@ -637,4 +640,9 @@ void MainWindow::on_pasteMapItemAction_triggered()
         this->curMapInfo->getMapItemsPtr()->append(item);
         this->regSignalForMapItem(item);
     }
+}
+
+void MainWindow::on_changeMapItemAction_triggered()
+{
+
 }

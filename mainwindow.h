@@ -67,6 +67,7 @@ private slots:
     void map_item_end_drag(QPointF pos,const QMimeData* data);
     void on_copyMapItemAction_triggered();
     void on_pasteMapItemAction_triggered();
+    void on_changeMapItemAction_triggered();
 };
 
 #endif // MAINWINDOW_H
