@@ -23,8 +23,10 @@ InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,MapItem* m
     ui->setupUi(this);
     if(returnItem){
         ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("修改"));
+        this->change = true;
     }else{
         ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("确定"));
+        this->change = false;
     }
 
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("取消"));
@@ -53,9 +55,9 @@ InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,MapItem* m
 
         this->ui->crossTypeBox->setValue(this->returnItem->crossType);
 
-        this->ui->tileWidth->setValue(this->returnItem->iColnum);
+        this->ui->tileWidth->setValue(this->returnItem->getWidth());
         this->ui->tileWidthLabel->setNum(this->returnItem->getWidth());
-        this->ui->tileHeight->setValue(this->returnItem->iRownum);
+        this->ui->tileHeight->setValue(this->returnItem->getHeight());
         this->ui->tileHeightLabel->setNum(this->returnItem->getHeight());
         this->ui->xSpinBox->setValue(this->returnItem->mapX);
         this->ui->ySpinBox->setValue(this->returnItem->mapY);
@@ -64,7 +66,7 @@ InMapItemDialog::InMapItemDialog(MapInfo* mapinfo,MapManager* manager,MapItem* m
         this->ui->staminaSpinBox->setValue(this->returnItem->breakType);
         this->ui->itemNameEdit->setText(this->returnItem->typeName);
         this->changeSelectBase(this->returnItem->hindex,this->returnItem->vindex);
-
+        this->ui->itemView->centerOn(this->selectRect);
     }else{
         this->returnItem = new MapItem(this->mapInfo->base);
         select_item_on_mouse_press(1.0,1.0,0); // 默认选择贴图1,1
@@ -114,7 +116,7 @@ void InMapItemDialog::ok_click()
 void InMapItemDialog::cancel_click()
 {
     qDebug() << "onCancelClick";
-    delete this->returnItem;
+    if(!isChange())delete this->returnItem;
     this->returnItem = 0;
 }
 
@@ -145,4 +147,9 @@ void InMapItemDialog::rule_slider()
 {
     QSlider* sender = static_cast<QSlider* >(this->sender());
     sender->setValue(sender->value() - sender->value() % sender->singleStep());
+}
+
+bool InMapItemDialog::isChange()
+{
+    return this->change;
 }

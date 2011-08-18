@@ -284,10 +284,12 @@ void MainWindow::on_saveAction_triggered()
         this->curMapInfo->name = this->ui->lineEdit_name->text();
         this->curMapInfo->type = QVariant(this->ui->lineEdit_type->text()).toUInt();
         this->curMapInfo->writeMap(filename);
+        this->changed = false;
     }else{
         QMessageBox::information(this,tr("错误"),tr("需要打开一个文件"));
     }
 }
+
 //操作区-贴图按键
 void MainWindow::map_base_on_press(int key)
 {
@@ -644,5 +646,17 @@ void MainWindow::on_pasteMapItemAction_triggered()
 
 void MainWindow::on_changeMapItemAction_triggered()
 {
+    if(this->curSprite){
+        if(typeid(*this->curSprite) == typeid(MapItem)){
+            if(isOpen()){
+                MapItem* item = static_cast<MapItem*>(this->curSprite);
+                InMapItemDialog dialog(this->curMapInfo,this->manager,item,this);
+                MapItem* updateItem = dialog.createMapItem();
 
+                if(updateItem){ //更新物件成功
+                    updateItem->updateLocation();
+                }
+            }
+        }
+    }
 }

@@ -336,6 +336,9 @@
      <pointsize>10</pointsize>
     </font>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
+   </property>
   </action>
   <action name="mapitemAction">
    <property name="checkable">
@@ -354,6 +357,9 @@
     <font>
      <pointsize>10</pointsize>
     </font>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+2</string>
    </property>
   </action>
   <action name="openAction">

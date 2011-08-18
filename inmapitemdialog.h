@@ -21,6 +21,7 @@ public:
     InMapItemDialog(MapInfo* mapinfo,MapManager* manager,MapItem* mapitem = 0,QWidget *parent = 0);
     ~InMapItemDialog();
     MapItem* createMapItem();
+    bool isChange();
 protected:
     void closeEvent(QCloseEvent *);
 private:
@@ -31,6 +32,7 @@ private:
     QGraphicsItem* selectRect;
     Sprite* baseItems;
     Ui::InMapItemDialog *ui;
+    bool change;
     void changeSelectBase(int mhindex,int mvindex);
 private slots:
     void ok_click();
