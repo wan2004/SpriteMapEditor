@@ -481,7 +481,7 @@ void MainWindow::on_lineEdit_name_textChanged(const QString& name)
     qDebug() << "name is " <<  name;
 }
 /*
-  检测当前文档熟悉是否变更
+  检测当前文档属性是否变更
   */
 bool MainWindow::isChange(){
     if(this->curMapInfo){  //检查属性变更
@@ -533,6 +533,7 @@ void MainWindow::on_insertMapItemAction_triggered()
 {
     if(isOpen()){
         InMapItemDialog dialog(this->curMapInfo,this->manager,0,this);
+        dialog.setWindowTitle(tr("插入物件"));
         MapItem* insertItem = dialog.createMapItem();
 
         if(insertItem){ //创建物件成功
@@ -555,10 +556,9 @@ void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
         connect(obj,SIGNAL(onDrop(QPointF,const QMimeData*)),this,SLOT(map_item_end_drag(QPointF,const QMimeData*)));
 
         this->manager->addSprite(obj,"frame");
+
         if(this->curSprite)this->curSprite->setOpacity(1); //恢复上个贴图显示
         this->curSprite = base;
-
-        if(this->curSprite)this->curSprite->setOpacity(1);
 
         this->drag = new QDrag(this);
 
@@ -580,8 +580,9 @@ void MainWindow::map_item_start_drag(qreal mx,qreal my,Qt::MouseButtons btn)
 
         disconnect(obj);
 
-
+        #ifdef Q_WS_WIN
         delete drag;
+        #endif
         delete obj;
     }
 }
@@ -643,7 +644,7 @@ void MainWindow::on_pasteMapItemAction_triggered()
         this->regSignalForMapItem(item);
     }
 }
-
+//编辑-修改物件
 void MainWindow::on_changeMapItemAction_triggered()
 {
     if(this->curSprite){
@@ -651,6 +652,7 @@ void MainWindow::on_changeMapItemAction_triggered()
             if(isOpen()){
                 MapItem* item = static_cast<MapItem*>(this->curSprite);
                 InMapItemDialog dialog(this->curMapInfo,this->manager,item,this);
+                dialog.setWindowTitle(tr("修改物件"));
                 MapItem* updateItem = dialog.createMapItem();
 
                 if(updateItem){ //更新物件成功
